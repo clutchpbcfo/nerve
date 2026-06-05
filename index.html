@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+<title>NERVE — feel prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#08080F; --ink:#F3F3FB; --muted:#8C8CB0; --faint:#55557A; --line:#23233F;
+    --gold:#FFC83D; --green:#37D58C; --red:#FF4D67; --brand:#8B6CFF; --mag:#FF3D81;
+    --fd:'Chakra Petch','Arial Narrow',system-ui,sans-serif; --fm:'JetBrains Mono',ui-monospace,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{background:radial-gradient(900px 600px at 50% 0%, #16162e 0%, var(--bg) 60%), var(--bg);
+    color:var(--ink); font-family:var(--fm); overflow:hidden; user-select:none}
+  #shake{height:100vh; height:100svh; height:100dvh; display:flex; flex-direction:column}
+
+  .topbar{display:flex; align-items:center; gap:14px; padding:14px 18px; border-bottom:1px solid var(--line); z-index:5}
+  .back{color:var(--muted); text-decoration:none; font-size:12px; letter-spacing:.05em}
+  .back:hover{color:var(--ink)}
+  .title{font-family:var(--fd); font-weight:700; font-size:18px; letter-spacing:.04em}
+  .title b{color:var(--gold)}
+  .freebadge{font-size:9px; letter-spacing:.16em; color:var(--green); border:1px solid #1f5f43; padding:3px 7px; border-radius:999px}
+  .sp{flex:1}
+  .bal{font-size:13px; color:var(--muted)} .bal b{color:var(--gold)}
+  .mute{cursor:pointer; color:var(--faint); font-size:16px; border:1px solid var(--line); border-radius:8px; padding:4px 9px}
+
+  .stage{position:relative; flex:1; overflow:hidden}
+  #cvs{position:absolute; inset:0; width:100%; height:100%}
+  .pot{position:absolute; top:18px; left:50%; transform:translateX(-50%); text-align:center; z-index:3}
+  .pot .l{font-size:10px; letter-spacing:.24em; color:var(--faint)}
+  .pot .v{font-family:var(--fd); font-weight:700; font-size:26px; color:var(--ink)}
+  .pot .v b{color:var(--gold)}
+  .mult{position:absolute; top:46%; left:50%; transform:translate(-50%,-50%); z-index:3; text-align:center; pointer-events:none}
+  .mult .m{font-family:var(--fd); font-weight:700; font-size:84px; line-height:1; letter-spacing:.01em;
+    color:var(--gold); text-shadow:0 0 30px #ffc83d55; transition:color .1s}
+  .mult .s{font-size:11px; letter-spacing:.2em; color:var(--muted); margin-top:6px}
+  .fair{position:absolute; left:16px; bottom:14px; font-size:10px; letter-spacing:.1em; color:var(--green); z-index:3}
+  .seedline{position:absolute; right:16px; bottom:14px; font-size:9px; color:var(--faint); z-index:3}
+
+  .players{position:absolute; left:0; right:0; bottom:54px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap; padding:0 12px; z-index:3}
+  .pl{min-width:78px; border:1px solid var(--line); border-radius:10px; padding:7px 9px; background:#0d0d1a; text-align:center}
+  .pl .nm{font-size:11px; color:var(--muted)} .pl.you .nm{color:var(--brand); font-weight:600}
+  .pl .st{font-size:12px; font-family:var(--fd); font-weight:600; margin-top:2px; color:var(--ink)}
+  .pl.cashed{border-color:#1f5f43} .pl.cashed .st{color:var(--green)}
+  .pl.bust{border-color:#5a2230; opacity:.6} .pl.bust .st{color:var(--red)}
+  .pl.in .st{color:var(--gold)}
+
+  .control{padding:12px 16px calc(16px + env(safe-area-inset-bottom,0px)); z-index:5; flex:none}
+  .bigbtn{width:100%; max-width:560px; margin:0 auto; display:block; font-family:var(--fd); font-weight:700;
+    letter-spacing:.06em; font-size:22px; padding:20px; border-radius:16px; cursor:pointer; border:none; color:#0b0b12;
+    background:var(--gold); box-shadow:0 0 28px #ffc83d44; transition:transform .08s, background .2s, box-shadow .2s}
+  .bigbtn:active{transform:scale(.985)}
+  .bigbtn.cash{background:var(--green); box-shadow:0 0 30px #37d58c55; color:#04140d}
+  .bigbtn.wait{background:#1a1a2c; color:var(--muted); box-shadow:none; cursor:default}
+  .bigbtn.start{background:var(--brand); color:#fff; box-shadow:0 0 26px #8b6cff55}
+  .hint{text-align:center; color:var(--faint); font-size:11px; margin-top:9px; letter-spacing:.04em}
+
+  /* settle overlay */
+  .ov{position:absolute; inset:0; z-index:10; background:#070710e6; display:none; flex-direction:column;
+    align-items:center; justify-content:center; gap:14px; padding:20px}
+  .ov.on{display:flex; animation:fade .25s}
+  @keyframes fade{from{opacity:0}}
+  .ov h2{font-family:var(--fd); font-weight:700; font-size:40px; letter-spacing:.02em}
+  .ov .res{font-size:14px; color:var(--muted)}
+  .ov .res b{color:var(--ink)}
+  .ovwin h2{color:var(--green)} .ovbust h2{color:var(--red)}
+  .tbl{width:100%; max-width:420px; border:1px solid var(--line); border-radius:12px; overflow:hidden}
+  .tbl .r{display:flex; justify-content:space-between; padding:9px 14px; font-size:13px; border-bottom:1px solid var(--line)}
+  .tbl .r:last-child{border-bottom:none}
+  .tbl .r.you{background:#8b6cff14}
+  .tbl .r .g{color:var(--green)} .tbl .r .b{color:var(--red)}
+  .ov .seed{font-size:10px; color:var(--faint); max-width:420px; text-align:center; word-break:break-all}
+  .again{font-family:var(--fd); font-weight:700; letter-spacing:.05em; font-size:18px; padding:15px 40px; border-radius:14px;
+    border:none; cursor:pointer; background:var(--gold); color:#0b0b12; box-shadow:0 0 24px #ffc83d44}
+  .flash{position:absolute; inset:0; z-index:8; pointer-events:none; opacity:0}
+  /* profiles + leaderboard */
+  .pill{cursor:pointer; font-size:12px; color:var(--muted); border:1px solid var(--line); border-radius:999px; padding:5px 11px}
+  .pill:hover{color:var(--ink); border-color:var(--gold)}
+  .lbmini{margin-top:6px; width:100%; max-width:420px}
+  .lbcap{font-size:10px; letter-spacing:.18em; color:var(--gold); margin:6px 0 6px; text-align:center}
+  .lbrow{display:flex; justify-content:space-between; font-size:12px; padding:5px 12px; color:var(--muted); border-bottom:1px solid var(--line)}
+  .lbrow:last-child{border:none} .lbrow.me{color:var(--ink); background:#8b6cff14; border-radius:6px}
+  .lbg{color:var(--gold); font-weight:600} .muted{color:var(--faint)}
+  .lbmodal{position:fixed; inset:0; z-index:30; background:#06060be6; display:none; align-items:center; justify-content:center; padding:22px}
+  .lbmodal.on{display:flex}
+  .lbsheet{width:100%; max-width:380px; background:#10101c; border:1px solid var(--line); border-radius:16px; overflow:hidden}
+  .lbhead{display:flex; align-items:center; gap:8px; padding:14px 16px; font-family:var(--fd); font-weight:700; font-size:15px; border-bottom:1px solid var(--line)}
+  .lbx{margin-left:auto; cursor:pointer; color:var(--muted)} .lbx:hover{color:var(--ink)}
+  .lblist{padding:8px 10px; max-height:60vh; overflow:auto}
+  .lbnote{font-size:9px; color:var(--faint); text-align:center; padding:8px; letter-spacing:.05em}
+</style>
+</head>
+<body>
+<div id="shake">
+  <div class="topbar">
+    <a class="back" href="../arcade-shell/index.html">← Arcade</a>
+    <div class="title">NER<b>VE</b></div>
+    <span class="freebadge">FREE PLAY</span>
+    <div class="sp"></div>
+    <div class="pill" id="pname" title="click to rename">◎ guest</div>
+    <div class="pill" id="lbbtn" title="leaderboard">🏆</div>
+    <div class="bal">credits <b id="bal">500</b></div>
+    <div class="mute" id="mute">♪</div>
+  </div>
+
+  <div class="stage" id="stage">
+    <canvas id="cvs"></canvas>
+    <div class="pot"><div class="l">POT</div><div class="v"><b id="pot">0</b> credits</div></div>
+    <div class="mult"><div class="m" id="mult">1.00×</div><div class="s" id="msub">last nerve standing takes the pot</div></div>
+    <div class="players" id="players"></div>
+    <div class="fair">◆ PROVABLY FAIR</div>
+    <div class="seedline" id="seedline">commit · —</div>
+    <div class="flash" id="flash"></div>
+  </div>
+
+  <div class="control">
+    <button class="bigbtn start" id="btn">ANTE 5 · START ROUND</button>
+    <div class="hint" id="hint">Hold for a bigger cut — cash before the break. Sound on for the full feel.</div>
+  </div>
+
+  <div class="ov" id="ov">
+    <h2 id="ovh">ROUND</h2>
+    <div class="res" id="ovres"></div>
+    <div class="tbl" id="ovtbl"></div>
+    <div class="seed" id="ovseed"></div>
+    <div class="lbmini" id="ovboard"></div>
+    <button class="again" id="again">RE-ANTE 5 ◉</button>
+  </div>
+</div>
+
+<div class="lbmodal" id="lbmodal"><div class="lbsheet">
+  <div class="lbhead">🏆 TOP CASH-OUTS<span class="lbx" id="lbx">✕</span></div>
+  <div class="lblist" id="lblist">loading…</div>
+  <div class="lbnote">server-ranked · provably fair · the server holds the break, so fake scores can't post</div>
+</div></div>
+
+<script>
+/* ---------- config ---------- */
+const ANTE=5, RAKE=0.04, LAMBDA=0.16, NBOTS=4;
+const BOTNAMES=["deathstar","kira","walt","nyx","rook","vega"];
+let bal=500;
+/* ---------- backend: anti-cheat + profiles + leaderboard ---------- */
+const API='https://nerve-api.clutchpbcfo.workers.dev';
+let player={id:localStorage.getItem('nerveId'), name:localStorage.getItem('nerveName')};
+let serverMode=false, roundId=null;
+const NET={
+  player:(name)=>fetch(API+'/api/player',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id:player.id,name})}).then(r=>r.json()),
+  start:()=>fetch(API+'/api/round/start',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({playerId:player.id})}).then(r=>{if(!r.ok)throw 0;return r.json();}),
+  cash:(rid,m)=>fetch(API+'/api/round/cash',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({roundId:rid,m})}).then(r=>r.json()),
+  board:()=>fetch(API+'/api/leaderboard').then(r=>r.json())
+};
+async function ensurePlayer(){
+  if(!player.name) player.name='guest'+Math.floor(1000+Math.random()*9000);
+  try{ const p=await NET.player(player.name); player.id=p.id; player.name=p.name;
+    localStorage.setItem('nerveId',p.id); localStorage.setItem('nerveName',p.name); }catch(e){}
+  const el=document.getElementById('pname'); if(el) el.textContent='◎ '+(player.name||'guest');
+}
+
+/* ---------- elements ---------- */
+const stage=document.getElementById('stage'), cv=document.getElementById('cvs'), cx=cv.getContext('2d');
+const multEl=document.getElementById('mult'), msub=document.getElementById('msub'), potEl=document.getElementById('pot');
+const playersEl=document.getElementById('players'), btn=document.getElementById('btn'), hint=document.getElementById('hint');
+const ov=document.getElementById('ov'), shake=document.getElementById('shake'), flash=document.getElementById('flash');
+const balEl=document.getElementById('bal'), seedline=document.getElementById('seedline');
+
+/* ---------- audio ---------- */
+let AC, master, audioOn=true, hbTimer=null;
+function initAudio(){ if(AC) return; try{ AC=new (window.AudioContext||window.webkitAudioContext)();
+  master=AC.createGain(); master.gain.value=0.5; master.connect(AC.destination);}catch(e){ AC=null; } }
+function tone(freq,dur,type='sine',vol=0.2,glideTo){ if(!AC||!audioOn)return;
+  const o=AC.createOscillator(),g=AC.createGain(); o.type=type; o.frequency.value=freq;
+  if(glideTo)o.frequency.exponentialRampToValueAtTime(glideTo,AC.currentTime+dur);
+  g.gain.value=vol; g.gain.exponentialRampToValueAtTime(0.0001,AC.currentTime+dur);
+  o.connect(g); g.connect(master); o.start(); o.stop(AC.currentTime+dur); }
+function chime(){ tone(660,0.12,'triangle',0.25); setTimeout(()=>tone(990,0.18,'triangle',0.25),70); }
+function thud(){ tone(120,0.5,'sawtooth',0.3,40); if(AC&&audioOn){const n=AC.createBufferSource();
+  const b=AC.createBuffer(1,AC.sampleRate*0.3,AC.sampleRate); const d=b.getChannelData(0);
+  for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2); n.buffer=b;
+  const g=AC.createGain(); g.gain.value=0.25; n.connect(g); g.connect(master); n.start();} }
+function heartbeat(){ if(!AC||!audioOn||state!=='climb')return; tone(70,0.09,'sine',0.28);
+  const rate=Math.max(140, 620 - (mult-1)*120); hbTimer=setTimeout(heartbeat,rate); }
+document.getElementById('mute').onclick=function(){ audioOn=!audioOn; this.textContent=audioOn?'♪':'✕'; this.style.color=audioOn?'':'#55557a'; };
+
+/* ---------- sizing ---------- */
+let W,H; function size(){ const r=stage.getBoundingClientRect(); cv.width=r.width; cv.height=r.height; W=r.width; H=r.height; }
+addEventListener('resize',size); size();
+
+/* ---------- state ---------- */
+let state='idle';     // idle | countdown | climb | settle
+let t0=0, mult=1, breakAt=2, players=[], particles=[], shakeAmt=0, serverSeed='', curve=[];
+let ci=null, settleTimer=null;   // countdown interval + settle timeout, tracked so they can always be cancelled
+function rngSeed(){ let s=''; for(let i=0;i<16;i++)s+=Math.floor(Math.random()*16).toString(16); return s; }
+function drawBreak(){ const u=Math.random(); return Math.min(40, 1.0 + 0.6/Math.pow(1-u,0.55)); } // ~1.6× floor, ~1.9× median
+
+function setPlayers(){ players=[{name:'YOU',you:true,status:'in',cash:null}];
+  const pool=[...BOTNAMES].sort(()=>Math.random()-.5).slice(0,NBOTS);
+  pool.forEach(n=>{ // varied nerve: chickens, normals, degens
+    const roll=Math.random(); let tgt = roll<0.25 ? 1.2+Math.random()*0.6 : roll<0.8 ? 1.6+Math.random()*3.5 : 4+Math.random()*9;
+    players.push({name:n,you:false,status:'in',cash:null,target:+tgt.toFixed(2)}); });
+  renderPlayers(); }
+function renderPlayers(){ playersEl.innerHTML='';
+  players.forEach(p=>{ const d=document.createElement('div');
+    d.className='pl '+(p.you?'you ':'')+(p.status==='cashed'?'cashed':p.status==='bust'?'bust':'in');
+    let st = p.status==='cashed'? p.cash.toFixed(2)+'×' : p.status==='bust'? 'BUST' : (state==='idle'?'—':'…');
+    d.innerHTML=`<div class="nm">${p.name}</div><div class="st">${st}</div>`; playersEl.appendChild(d); }); }
+
+/* ---------- round flow ---------- */
+async function startRound(){
+  if(state==='countdown'||state==='climb') return;   // a round is already running — ignore extra taps
+  state='countdown';                                  // lock immediately (covers the async network gap)
+  clearInterval(ci); ci=null; clearTimeout(settleTimer); if(hbTimer)clearTimeout(hbTimer);
+  if(bal<ANTE){hint.textContent="Out of free credits — refresh to reset."; state='idle'; return;}
+  initAudio(); if(AC&&AC.state==='suspended')AC.resume();
+  bal-=ANTE; balEl.textContent=bal;
+  setPlayers(); curve=[]; particles=[]; ov.className='ov';
+  multEl.style.color='var(--brand)'; multEl.style.transform=''; multEl.textContent='…';
+  btn.className='bigbtn wait'; btn.textContent='—'; hint.textContent=''; msub.textContent='dealing in…';
+  serverMode=false; roundId=null;
+  try{ const rs=await Promise.race([NET.start(), new Promise((_,r)=>setTimeout(()=>r(0),5000))]);
+       roundId=rs.roundId; serverMode=true; breakAt=Infinity; seedline.textContent='commit · '+(rs.commit||'').slice(0,10)+'…'; }
+  catch(e){ breakAt=drawBreak(); serverSeed=rngSeed(); seedline.textContent='commit · '+cheapHash(serverSeed)+' · local'; }
+  potEl.textContent=(players.length*ANTE);
+  let c=3; msub.textContent='get ready'; multEl.textContent='3';
+  ci=setInterval(()=>{ c--; if(c>0){multEl.textContent=c; tone(440,0.08,'square',0.15);}
+    else { clearInterval(ci); ci=null; beginClimb(); } },650);
+}
+function beginClimb(){ state='climb'; t0=performance.now(); mult=1; multEl.style.color='var(--gold)';
+  msub.textContent='HOLD for more · CASH to lock'; tone(220,0.2,'sawtooth',0.12,330); heartbeat();
+  btn.className='bigbtn cash'; btn.textContent='CASH @ 1.00×'; }
+
+function youCash(){ const me=players[0]; if(state!=='climb'||me.status!=='in')return;
+  const m=mult;
+  if(serverMode){
+    me.status='cashing'; btn.className='bigbtn wait'; btn.textContent='locking '+m.toFixed(2)+'×…';
+    Promise.race([NET.cash(roundId,m), new Promise((_,r)=>setTimeout(()=>r(0),5000))]).then(resp=>{
+      if(resp && resp.result){ breakAt=resp.breakAt; serverSeed=resp.serverSeed;
+        if(resp.result==='cashed'){ me.status='cashed'; me.cash=m; chime(); burst('#37D58C'); flashScreen('#37D58C',0.18); }
+        else { me.status='bust'; me.cash=null; }
+        endRoundServer();
+      } else { me.status='cashed'; me.cash=m; serverMode=false; breakAt=m*1.15; endRound(); }
+    }).catch(()=>{ me.status='cashed'; me.cash=m; serverMode=false; breakAt=m*1.15; endRound(); });
+  } else {
+    me.status='cashed'; me.cash=m; renderPlayers(); chime(); burst('#37D58C'); flashScreen('#37D58C',0.18);
+    btn.className='bigbtn wait'; btn.textContent='CASHED '+m.toFixed(2)+'× · waiting…'; msub.textContent='locked '+m.toFixed(2)+'× — will they bust?';
+  } }
+
+btn.onclick=()=>{ if(state==='idle')startRound(); else if(state==='climb')youCash(); };
+document.getElementById('again').onclick=startRound;
+
+/* ---------- main loop ---------- */
+function loop(){
+  if(state==='climb'){
+    const t=(performance.now()-t0)/1000; mult=Math.exp(LAMBDA*t);
+    // bots
+    players.forEach(p=>{ if(!p.you&&p.status==='in'&&mult>=p.target){ p.status='cashed'; p.cash=mult;
+      tone(550+Math.random()*200,0.08,'triangle',0.12); renderPlayers(); } });
+    // break? (local mode only — in server mode the break is server-secret)
+    if(isFinite(breakAt) && mult>=breakAt){ endRound(); }
+    else {
+      multEl.style.transform='scale('+(1+Math.min(mult,30)/90)+')';
+      const hot=Math.min(1,(mult-1)/8); multEl.style.color=`rgb(255,${Math.round(200-hot*120)},${Math.round(61-hot*40)})`;
+      if(players[0] && players[0].status==='in') btn.textContent='CASH @ '+mult.toFixed(2)+'×';
+      curve.push(mult);
+      if(Math.random()<0.04) shakeAmt=Math.min(6,(mult-1)*0.6);
+      if(serverMode && mult>=25 && players[0] && players[0].status==='in') youCash(); // auto-cap if you never cash
+    }
+    multEl.textContent = mult.toFixed(2)+'×';
+    potEl.textContent=(players.length*ANTE);
+  }
+  // shake decay
+  shakeAmt*=0.85; if(shakeAmt<0.1)shakeAmt=0;
+  shake.style.transform = shakeAmt? `translate(${(Math.random()-.5)*shakeAmt}px,${(Math.random()-.5)*shakeAmt}px)`:'';
+  draw();
+  requestAnimationFrame(loop);
+}
+function endRound(){ state='settle'; if(hbTimer)clearTimeout(hbTimer);
+  const me=players[0]; const youBust = me.status==='in';
+  players.forEach(p=>{ if(p.status==='in') p.status='bust'; }); // anyone still holding at the break busts
+  renderPlayers();
+  // settle: survivors split pot by points (cash mult)
+  const grossPot=players.length*ANTE; const pot=grossPot*(1-RAKE);
+  const survivors=players.filter(p=>p.status==='cashed');
+  const totPts=survivors.reduce((a,p)=>a+p.cash,0);
+  if(survivors.length===0){ players.forEach(p=> p.payout = ANTE*(1-RAKE)); }  // no survivors → refund antes minus rake (house never keeps the pot)
+  else { players.forEach(p=>{ p.payout = (p.status==='cashed'&&totPts>0)? pot*p.cash/totPts : 0; }); }
+  // visuals
+  if(youBust){ thud(); burst('#FF4D67'); flashScreen('#FF4D67',0.32); shakeAmt=14; }
+  else { const win=me.payout>ANTE; flashScreen(win?'#37D58C':'#ffffff',0.2); }
+  flashScreen('#ffffff',0.25);
+  settleTimer=setTimeout(showSettle, 700);
+}
+function endRoundServer(){ state='settle'; if(hbTimer)clearTimeout(hbTimer);
+  players.forEach(p=>{ if(p.you) return;
+    if(p.status==='cashed'){ if(p.cash>=breakAt){ p.status='bust'; p.cash=null; } } else { p.status='bust'; } });
+  renderPlayers();
+  const grossPot=players.length*ANTE; const pot=grossPot*(1-RAKE);
+  const survivors=players.filter(p=>p.status==='cashed'); const totPts=survivors.reduce((a,p)=>a+p.cash,0);
+  if(survivors.length===0){ players.forEach(p=> p.payout=ANTE*(1-RAKE)); }
+  else { players.forEach(p=>{ p.payout=(p.status==='cashed'&&totPts>0)? pot*p.cash/totPts : 0; }); }
+  const me=players[0];
+  if(me.status!=='cashed'){ thud(); burst('#FF4D67'); flashScreen('#FF4D67',0.32); shakeAmt=14; }
+  flashScreen('#ffffff',0.22);
+  settleTimer=setTimeout(showSettle, 700);
+}
+function renderBoard(d, el, full){
+  const top=(d&&d.top)||[];
+  if(!top.length){ el.innerHTML='<div class="lbrow"><span class="muted">no scores yet — be the first</span></div>'; return; }
+  el.innerHTML=(full?'':'<div class="lbcap">🏆 TOP CASH-OUTS</div>')+top.slice(0,full?25:5).map((p,i)=>
+    '<div class="lbrow'+(p.name===player.name?' me':'')+'"><span>'+(i+1)+'. '+p.name+'</span><span class="lbg">'+(p.best_mult||0).toFixed(2)+'×</span></div>').join('');
+}
+function showSettle(){ const me=players[0];
+  bal += Math.round(me.payout); balEl.textContent=bal;
+  const allBust = players.every(p=>p.status!=='cashed');
+  const won = me.status==='cashed'; const net=Math.round(me.payout)-ANTE;
+  const ovh=document.getElementById('ovh');
+  if(allBust){
+    ov.className='ov on'; ovh.style.color='var(--gold)'; ovh.textContent='EVERYONE BUST';
+    document.getElementById('ovres').innerHTML=`The break hit <b>${breakAt.toFixed(2)}×</b> before a single nerve cracked. No survivors — antes refunded minus rake.`;
+  } else {
+    ovh.style.color='';
+    ov.className='ov on '+(won&&net>0?'ovwin':won?'':'ovbust');
+    ovh.textContent = won? (net>0?'YOU WON':'YOU CASHED') : 'BUSTED';
+    document.getElementById('ovres').innerHTML = won
+      ? `Cashed at <b>${me.cash.toFixed(2)}×</b> — took <b>${Math.round(me.payout)}</b> from a ${Math.round(players.length*ANTE*(1-RAKE))} pot. Break was <b>${breakAt.toFixed(2)}×</b>.`
+      : `You held to the break at <b>${breakAt.toFixed(2)}×</b> and busted. Survivors split the pot.`;
+  }
+  const sorted=[...players].sort((a,b)=>b.payout-a.payout);
+  document.getElementById('ovtbl').innerHTML = sorted.map(p=>`<div class="r ${p.you?'you':''}">
+    <span>${p.name}${p.status==='bust'?' <span class="b">· bust</span>':' · '+p.cash.toFixed(2)+'×'}</span>
+    <span class="${p.payout>0?'g':'b'}">${p.payout>0?'+'+Math.round(p.payout):'0'}</span></div>`).join('');
+  document.getElementById('ovseed').textContent='revealed seed · '+serverSeed+(serverMode?'  · server-verified, provably fair':'  · local (offline)');
+  const ob=document.getElementById('ovboard');
+  if(serverMode){ ob.innerHTML='<div class="lbcap">🏆 ranking…</div>'; NET.board().then(d=>renderBoard(d,ob,false)).catch(()=>{ob.innerHTML='';}); }
+  else { ob.innerHTML=''; }
+  state='idle';
+  btn.className='bigbtn start'; btn.textContent='ANTE 5 · START ROUND';
+}
+
+/* ---------- draw: grid + curve + particles ---------- */
+function draw(){ cx.clearRect(0,0,W,H);
+  cx.strokeStyle='rgba(255,200,61,0.05)'; cx.lineWidth=1;
+  for(let x=0;x<W;x+=44){cx.beginPath();cx.moveTo(x,0);cx.lineTo(x,H);cx.stroke();}
+  for(let y=0;y<H;y+=44){cx.beginPath();cx.moveTo(0,y);cx.lineTo(W,y);cx.stroke();}
+  if((state==='climb'||state==='settle')&&curve.length>1){
+    const cMax=(isFinite(breakAt)&&breakAt>1)?breakAt:Math.max(2,mult*1.05);
+    cx.beginPath();
+    curve.forEach((m,i)=>{ const x=(i/Math.max(curve.length,80))*W*1.0; const y=H-(Math.min(m,cMax)/cMax)*(H*0.62)-70;
+      i?cx.lineTo(x,y):cx.moveTo(x,y); });
+    const g=cx.createLinearGradient(0,H,0,0); g.addColorStop(0,'#ffc83d22'); g.addColorStop(1,'#ffc83d');
+    cx.strokeStyle=g; cx.lineWidth=3; cx.shadowColor='#ffc83d'; cx.shadowBlur=14; cx.stroke(); cx.shadowBlur=0;
+  }
+  particles.forEach((p,i)=>{ p.x+=p.vx; p.y+=p.vy; p.vy+=0.15; p.life--;
+    cx.globalAlpha=Math.max(0,p.life/40); cx.fillStyle=p.c; cx.beginPath(); cx.arc(p.x,p.y,p.r,0,7); cx.fill(); cx.globalAlpha=1;
+    if(p.life<=0)particles.splice(i,1); });
+}
+function burst(color){ const cxp=W/2, cyp=H*0.46; for(let i=0;i<34;i++){ const a=Math.random()*7, s=2+Math.random()*7;
+  particles.push({x:cxp,y:cyp,vx:Math.cos(a)*s,vy:Math.sin(a)*s-2,r:1+Math.random()*3,life:40,c:color}); } }
+function flashScreen(color,amt){ flash.style.background=color; flash.style.opacity=amt;
+  flash.animate([{opacity:amt},{opacity:0}],{duration:380}); setTimeout(()=>flash.style.opacity=0,360); }
+
+function cheapHash(s){ let h=0; for(let i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))>>>0;} return ('00000000'+h.toString(16)).slice(-8)+'…'; }
+
+/* profiles + leaderboard wiring */
+document.getElementById('pname').onclick=()=>{ const n=prompt('Name for the leaderboard:', player.name||''); if(n){ player.name=n.slice(0,16); ensurePlayer(); } };
+document.getElementById('lbbtn').onclick=()=>{ const m=document.getElementById('lbmodal'); m.classList.add('on'); const l=document.getElementById('lblist'); l.innerHTML='loading…'; NET.board().then(d=>renderBoard(d,l,true)).catch(()=>{l.innerHTML='<div class="lbrow"><span class="muted">leaderboard offline</span></div>';}); };
+document.getElementById('lbx').onclick=()=>document.getElementById('lbmodal').classList.remove('on');
+document.getElementById('lbmodal').onclick=e=>{ if(e.target.id==='lbmodal')e.currentTarget.classList.remove('on'); };
+ensurePlayer();
+renderPlayers(); loop();
+</script>
+</body>
+</html>
