@@ -171,14 +171,14 @@ const ANTE=5, RAKE=0.04, LAMBDA=0.16, NBOTS=4;
 const BOTNAMES=["deathstar","kira","walt","nyx","rook","vega"];
 let bal=500;
 /* ---------- backend: anti-cheat + profiles + leaderboard ---------- */
-const API='https://nerve-api.clutchpbcfo.workers.dev';
+const API='https://www.stakit.app/api/nerve';
 let player={id:localStorage.getItem('nerveId'), name:localStorage.getItem('nerveName')};
 let serverMode=false, roundId=null;
 const NET={
-  player:(name)=>fetch(API+'/api/player',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id:player.id,name})}).then(r=>r.json()),
-  start:()=>fetch(API+'/api/round/start',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({playerId:player.id})}).then(r=>{if(!r.ok)throw 0;return r.json();}),
-  cash:(rid,m)=>fetch(API+'/api/round/cash',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({roundId:rid,m})}).then(r=>r.json()),
-  board:()=>fetch(API+'/api/leaderboard').then(r=>r.json())
+  player:(name)=>fetch(API+'?op=player',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id:player.id,name})}).then(r=>r.json()),
+  start:()=>fetch(API+'?op=start',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({playerId:player.id})}).then(r=>{if(!r.ok)throw 0;return r.json();}),
+  cash:(rid,m)=>fetch(API+'?op=cash',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({roundId:rid,m})}).then(r=>r.json()),
+  board:()=>fetch(API+'?op=top').then(r=>r.json())
 };
 async function ensurePlayer(){
   if(!player.name) player.name='guest'+Math.floor(1000+Math.random()*9000);
