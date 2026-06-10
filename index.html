@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
-<title>NERVE — hold your nerve, cash before the break | INSERT COIN</title>
+<title>NERVE — feel prototype</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
@@ -76,10 +76,6 @@
   .ov .seed{font-size:10px; color:var(--faint); max-width:420px; text-align:center; word-break:break-all}
   .again{font-family:var(--fd); font-weight:700; letter-spacing:.05em; font-size:18px; padding:15px 40px; border-radius:14px;
     border:none; cursor:pointer; background:var(--gold); color:#0b0b12; box-shadow:0 0 24px #ffc83d44}
-  .ovbtns{display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap}
-  a.again{text-decoration:none; display:inline-block; text-align:center}
-  .again.ghost{background:transparent; color:var(--muted); border:1px solid var(--line); box-shadow:none; padding:15px 26px}
-  .again.ghost:hover{color:var(--ink); border-color:var(--gold)}
   .flash{position:absolute; inset:0; z-index:8; pointer-events:none; opacity:0}
   /* profiles + leaderboard */
   .pill{cursor:pointer; font-size:12px; color:var(--muted); border:1px solid var(--line); border-radius:999px; padding:5px 11px}
@@ -89,6 +85,22 @@
   .lbrow{display:flex; justify-content:space-between; font-size:12px; padding:5px 12px; color:var(--muted); border-bottom:1px solid var(--line)}
   .lbrow:last-child{border:none} .lbrow.me{color:var(--ink); background:#8b6cff14; border-radius:6px}
   .lbg{color:var(--gold); font-weight:600} .muted{color:var(--faint)}
+  /* live pot (multiplayer) — additive */
+  .potbtn{width:100%; max-width:560px; margin:10px auto 0; display:block; font-family:var(--fd); font-weight:700;
+    letter-spacing:.08em; font-size:14px; padding:12px; border-radius:14px; cursor:pointer;
+    border:1px solid var(--gold); color:var(--gold); background:transparent; transition:background .15s}
+  .potbtn:hover{background:#ffc83d14}
+  .tierwrap{display:flex; gap:10px; padding:16px}
+  .tierbtn{flex:1; cursor:pointer; background:#0d0d1a; border:1px solid var(--line); border-radius:12px; padding:16px 8px;
+    color:var(--ink); font-family:var(--fd); display:flex; flex-direction:column; gap:4px; align-items:center}
+  .tierbtn b{font-size:20px; color:var(--gold)} .tierbtn span{font-size:9px; letter-spacing:.14em; color:var(--muted); text-transform:uppercase}
+  .tierbtn:hover{border-color:var(--gold); background:#ffc83d0d}
+  .feed{position:absolute; right:12px; top:64px; z-index:4; display:flex; flex-direction:column; gap:6px; align-items:flex-end; pointer-events:none; max-width:62%}
+  .feed .ev{font-size:11px; color:var(--muted); background:#0d0d1acc; border:1px solid var(--line); border-radius:8px; padding:5px 9px; animation:fade .25s}
+  .feed .ev b{color:var(--green)} .feed .ev.bust b{color:var(--red)}
+  .ovexit{font-family:var(--fm); font-size:12px; letter-spacing:.05em; padding:9px 18px; border-radius:10px; cursor:pointer;
+    background:transparent; border:1px solid var(--line); color:var(--muted)}
+  .ovexit:hover{color:var(--ink); border-color:var(--gold)}
   .lbmodal{position:fixed; inset:0; z-index:30; background:#06060be6; display:none; align-items:center; justify-content:center; padding:22px}
   .lbmodal.on{display:flex}
   .lbsheet{width:100%; max-width:380px; background:#10101c; border:1px solid var(--line); border-radius:16px; overflow:hidden}
@@ -99,26 +111,6 @@
 </style>
 </head>
 <body>
-<div id="nerveintro-splash" style="position:fixed;inset:0;z-index:2147483600;background:#08080F;display:flex;align-items:center;justify-content:center;overflow:hidden">
-  <video id="nerveintro-vid" src="nerve-intro.mp4.mp4" playsinline preload="auto" style="width:100%;height:100%;object-fit:contain;background:#08080F"></video>
-  <div id="nerveintro-gate" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:radial-gradient(circle at 50% 42%,rgba(139,108,255,.14),rgba(8,8,15,.84))">
-    <button id="nerveintro-start" style="padding:18px 46px;border:2px solid #8B6CFF;border-radius:999px;background:rgba(139,108,255,.18);color:#fff;font:700 22px 'Chakra Petch',system-ui,sans-serif;letter-spacing:3px;cursor:pointer;box-shadow:0 0 36px rgba(139,108,255,.55);animation:icPulse 1.6s ease-in-out infinite">&#9654; PRESS START</button>
-    <div style="color:#c8c4e4;font:600 12px 'Chakra Petch',system-ui,sans-serif;letter-spacing:3px">SOUND ON &#128266;</div>
-  </div>
-  <button id="nerveintro-skip" style="position:absolute;bottom:24px;right:24px;padding:9px 18px;border:1px solid rgba(255,255,255,.3);border-radius:999px;background:rgba(0,0,0,.4);color:#fff;font:600 13px system-ui,sans-serif;letter-spacing:1px;cursor:pointer;opacity:.5">SKIP &#9654;</button>
-</div>
-<style>@keyframes icPulse{0%,100%{transform:scale(1);box-shadow:0 0 36px rgba(139,108,255,.5)}50%{transform:scale(1.06);box-shadow:0 0 54px rgba(139,108,255,.85)}}</style>
-<script>
-(function(){var o=document.getElementById('nerveintro-splash');if(!o)return;
-function reveal(){if(!o)return;var x=o;o=null;x.style.transition='opacity .55s ease';x.style.opacity='0';setTimeout(function(){if(x&&x.parentNode)x.parentNode.removeChild(x);},600);try{sessionStorage.setItem('nerveintroSeen','1');}catch(e){}}
-try{if(sessionStorage.getItem('nerveintroSeen')){if(o.parentNode)o.parentNode.removeChild(o);return;}}catch(e){}
-var v=document.getElementById('nerveintro-vid'),gate=document.getElementById('nerveintro-gate'),sk=document.getElementById('nerveintro-skip'),st=document.getElementById('nerveintro-start');
-if(v){v.addEventListener('ended',reveal);v.addEventListener('error',reveal);}
-function start(){if(gate)gate.style.display='none';if(v){v.muted=false;v.volume=1;try{v.currentTime=0;}catch(e){}var p=v.play&&v.play();if(p&&p.catch)p.catch(function(){v.muted=true;v.play&&v.play();});}}
-if(st)st.addEventListener('click',start);
-if(sk)sk.addEventListener('click',reveal);
-})();
-</script>
 <div id="shake">
   <div class="topbar">
     <a class="back" href="../arcade-shell/index.html">← Arcade</a>
@@ -136,6 +128,7 @@ if(sk)sk.addEventListener('click',reveal);
     <div class="pot"><div class="l">POT</div><div class="v"><b id="pot">0</b> credits</div></div>
     <div class="mult"><div class="m" id="mult">1.00×</div><div class="s" id="msub">last nerve standing takes the pot</div></div>
     <div class="players" id="players"></div>
+    <div class="feed" id="feed"></div>
     <div class="fair">◆ PROVABLY FAIR</div>
     <div class="seedline" id="seedline">commit · —</div>
     <div class="flash" id="flash"></div>
@@ -143,8 +136,8 @@ if(sk)sk.addEventListener('click',reveal);
 
   <div class="control">
     <button class="bigbtn start" id="btn">ANTE 5 · START ROUND</button>
+    <button class="potbtn" id="potbtn">◉ LIVE POT · REAL PLAYERS · 25 / 100 / 500</button>
     <div class="hint" id="hint">Hold for a bigger cut — cash before the break. Sound on for the full feel.</div>
-    <div class="hint" id="pbline" style="margin-top:4px"></div>
   </div>
 
   <div class="ov" id="ov">
@@ -152,29 +145,24 @@ if(sk)sk.addEventListener('click',reveal);
     <div class="res" id="ovres"></div>
     <div class="tbl" id="ovtbl"></div>
     <div class="seed" id="ovseed"></div>
-    <div class="seed" id="ovhist" style="margin-top:4px"></div>
     <div class="lbmini" id="ovboard"></div>
-    <div class="ovbtns">
-      <a class="again ghost" href="../arcade-shell/index.html">⌂ ARCADE</a>
-      <button class="again" id="again">RE-ANTE 5 ◉</button>
-    </div>
+    <button class="again" id="again">RE-ANTE 5 ◉</button>
+    <button class="ovexit" id="ovexit" style="display:none">← back to menu</button>
   </div>
 </div>
 
-<div class="lbmodal" id="nameModal"><div class="lbsheet">
-  <div class="lbhead">YOUR TAG<span class="lbx" onclick="document.getElementById('nameModal').classList.remove('on')">✕</span></div>
-  <div style="padding:6px 2px 2px">
-    <input id="nameInp" maxlength="16" placeholder="3-16 chars — own your cash-outs" style="width:100%;background:#0d0d1a;border:1px solid var(--line);border-radius:10px;color:var(--ink);font-family:var(--fm);font-size:14px;padding:12px 14px;outline:none">
-    <button id="nameGo" class="bigbtn" style="margin-top:10px;font-size:16px;padding:13px">LOCK IT IN</button>
-    <div style="font-size:10px;color:var(--faint);margin-top:8px;letter-spacing:.06em">your best cash multipliers post under this tag</div>
+<div class="lbmodal" id="tierov"><div class="lbsheet">
+  <div class="lbhead">◉ LIVE POT — pick your ante<span class="lbx" id="tierx">✕</span></div>
+  <div class="tierwrap">
+    <button class="tierbtn" data-t="25"><b>25 ◉</b><span>casual</span></button>
+    <button class="tierbtn" data-t="100"><b>100 ◉</b><span>standard</span></button>
+    <button class="tierbtn" data-t="500"><b>500 ◉</b><span>high roller</span></button>
   </div>
+  <div class="lbnote">2–8 players · 20s lobby · shared secret break · survivors split the pot by nerve · server wallet <b id="tiercred">—</b></div>
 </div></div>
+
 <div class="lbmodal" id="lbmodal"><div class="lbsheet">
   <div class="lbhead">🏆 TOP CASH-OUTS<span class="lbx" id="lbx">✕</span></div>
-  <div style="display:flex;gap:8px;margin:2px 0 8px">
-    <button id="lbtabAll" class="bigbtn" style="flex:1;font-size:12px;padding:8px;background:var(--gold)">ALL-TIME</button>
-    <button id="lbtabDay" class="bigbtn" style="flex:1;font-size:12px;padding:8px;background:#1a1a2c;color:var(--muted);box-shadow:none">TODAY</button>
-  </div>
   <div class="lblist" id="lblist">loading…</div>
   <div class="lbnote">server-ranked · provably fair · the server holds the break, so fake scores can't post</div>
 </div></div>
@@ -183,20 +171,16 @@ if(sk)sk.addEventListener('click',reveal);
 /* ---------- config ---------- */
 const ANTE=5, RAKE=0.04, LAMBDA=0.16, NBOTS=4;
 const BOTNAMES=["deathstar","kira","walt","nyx","rook","vega"];
-const SAVE_KEY='nerve_save_v1';
-function loadSave(){ try{ const j=JSON.parse(localStorage.getItem(SAVE_KEY)); if(j&&isFinite(j.bal)) return j; }catch(e){} return {bal:500,bestM:0,rounds:0,cashes:0,hist:[]}; }
-const SAVE=loadSave();
-function persist(){ try{ localStorage.setItem(SAVE_KEY,JSON.stringify(SAVE)); }catch(e){} }
-let bal=SAVE.bal;
+let bal=500;
 /* ---------- backend: anti-cheat + profiles + leaderboard ---------- */
-const API='https://www.stakit.app/api/nerve';
+const API='https://nerve-api.clutchpbcfo.workers.dev';
 let player={id:localStorage.getItem('nerveId'), name:localStorage.getItem('nerveName')};
 let serverMode=false, roundId=null;
 const NET={
-  player:(name)=>fetch(API+'?op=player',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id:player.id,name})}).then(r=>r.json()),
-  start:()=>fetch(API+'?op=start',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({playerId:player.id})}).then(r=>{if(!r.ok)throw 0;return r.json();}),
-  cash:(rid,m)=>fetch(API+'?op=cash',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({roundId:rid,m})}).then(r=>r.json()),
-  board:(b)=>fetch(API+'?op=top'+(b==='daily'?'&board=daily':'')).then(r=>r.json())
+  player:(name)=>fetch(API+'/api/player',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id:player.id,name})}).then(r=>r.json()),
+  start:()=>fetch(API+'/api/round/start',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({playerId:player.id})}).then(r=>{if(!r.ok)throw 0;return r.json();}),
+  cash:(rid,m)=>fetch(API+'/api/round/cash',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({roundId:rid,m})}).then(r=>r.json()),
+  board:()=>fetch(API+'/api/leaderboard').then(r=>r.json())
 };
 async function ensurePlayer(){
   if(!player.name) player.name='guest'+Math.floor(1000+Math.random()*9000);
@@ -258,10 +242,10 @@ async function startRound(){
   if(state==='countdown'||state==='climb') return;   // a round is already running — ignore extra taps
   state='countdown';                                  // lock immediately (covers the async network gap)
   clearInterval(ci); ci=null; clearTimeout(settleTimer); if(hbTimer)clearTimeout(hbTimer);
-  if(bal<ANTE){ bal=100; SAVE.bal=bal; persist(); balEl.textContent=bal; hint.textContent="Staked you 100 fresh credits — make these count."; }
+  if(bal<ANTE){hint.textContent="Out of free credits — refresh to reset."; state='idle'; return;}
   initAudio(); if(AC&&AC.state==='suspended')AC.resume();
-  bal-=ANTE; SAVE.bal=bal; persist(); balEl.textContent=bal;
-  setPlayers(); players[0].tooLate=null; curve=[]; particles=[]; ov.className='ov';
+  bal-=ANTE; balEl.textContent=bal;
+  setPlayers(); curve=[]; particles=[]; ov.className='ov';
   multEl.style.color='var(--brand)'; multEl.style.transform=''; multEl.textContent='…';
   btn.className='bigbtn wait'; btn.textContent='—'; hint.textContent=''; msub.textContent='dealing in…';
   serverMode=false; roundId=null;
@@ -282,13 +266,10 @@ function youCash(){ const me=players[0]; if(state!=='climb'||me.status!=='in')re
   if(serverMode){
     me.status='cashing'; btn.className='bigbtn wait'; btn.textContent='locking '+m.toFixed(2)+'×…';
     Promise.race([NET.cash(roundId,m), new Promise((_,r)=>setTimeout(()=>r(0),5000))]).then(resp=>{
-      if(resp && resp.result){ serverSeed=resp.serverSeed;
-        if(resp.result==='cashed'){
-          me.status='cashed'; me.cash=m; chime(); burst('#37D58C'); flashScreen('#37D58C',0.18); renderPlayers();
-          breakAt=(resp.breakAt&&isFinite(resp.breakAt)&&resp.breakAt>m)?resp.breakAt:m*1.15; // reveal break and LET IT RIDE — round climbs to it, then settles
-          btn.className='bigbtn wait'; btn.textContent='CASHED '+m.toFixed(2)+'× · let it ride…';
-          msub.textContent='locked '+m.toFixed(2)+'× — how far does it go?';
-        } else { me.status='bust'; me.cash=null; me.tooLate=m; breakAt=resp.breakAt; endRoundServer(); }
+      if(resp && resp.result){ breakAt=resp.breakAt; serverSeed=resp.serverSeed;
+        if(resp.result==='cashed'){ me.status='cashed'; me.cash=m; chime(); burst('#37D58C'); flashScreen('#37D58C',0.18); }
+        else { me.status='bust'; me.cash=null; }
+        endRoundServer();
       } else { me.status='cashed'; me.cash=m; serverMode=false; breakAt=m*1.15; endRound(); }
     }).catch(()=>{ me.status='cashed'; me.cash=m; serverMode=false; breakAt=m*1.15; endRound(); });
   } else {
@@ -296,29 +277,37 @@ function youCash(){ const me=players[0]; if(state!=='climb'||me.status!=='in')re
     btn.className='bigbtn wait'; btn.textContent='CASHED '+m.toFixed(2)+'× · waiting…'; msub.textContent='locked '+m.toFixed(2)+'× — will they bust?';
   } }
 
-btn.onclick=()=>{ if(state==='idle')startRound(); else if(state==='climb')youCash(); };
-document.getElementById('again').onclick=startRound;
+btn.onclick=()=>{ if(state==='idle'&&!POT.on)startRound(); else if(state==='climb')(POT.on?potCashLive():youCash()); };
+document.getElementById('again').onclick=()=>{ if(POT.on)potJoinTier(POT.tier); else startRound(); };
 
 /* ---------- main loop ---------- */
 function loop(){
   if(state==='climb'){
-    const t=(performance.now()-t0)/1000; mult=Math.exp(LAMBDA*t);
-    // bots
-    players.forEach(p=>{ if(!p.you&&p.status==='in'&&mult>=p.target){ p.status='cashed'; p.cash=mult;
+    const t=POT.on?Math.max(0,((Date.now()+POT.off)-POT.t0)/1000):(performance.now()-t0)/1000; mult=Math.exp(LAMBDA*t);
+    // bots (solo only — bots NEVER ride real pots)
+    if(!POT.on) players.forEach(p=>{ if(!p.you&&p.status==='in'&&mult>=p.target){ p.status='cashed'; p.cash=mult;
       tone(550+Math.random()*200,0.08,'triangle',0.12); renderPlayers(); } });
     // break? (local mode only — in server mode the break is server-secret)
     if(isFinite(breakAt) && mult>=breakAt){ endRound(); }
     else {
       multEl.style.transform='scale('+(1+Math.min(mult,30)/90)+')';
       const hot=Math.min(1,(mult-1)/8); multEl.style.color=`rgb(255,${Math.round(200-hot*120)},${Math.round(61-hot*40)})`;
-      if(players[0] && players[0].status==='in') btn.textContent='CASH @ '+mult.toFixed(2)+'×';
+      const meBtn=POT.on?players.find(p=>p.you):players[0];
+      if(meBtn && meBtn.status==='in') btn.textContent='CASH @ '+mult.toFixed(2)+'×';
       curve.push(mult);
       if(Math.random()<0.04) shakeAmt=Math.min(6,(mult-1)*0.6);
       if(serverMode && mult>=25 && players[0] && players[0].status==='in') youCash(); // auto-cap if you never cash
     }
     multEl.textContent = mult.toFixed(2)+'×';
-    potEl.textContent=(players.length*ANTE);
+    potEl.textContent=POT.on?POT.total:(players.length*ANTE);
   }
+  else if(state==='potlobby'){
+    const left=Math.max(0,Math.ceil((POT.t0-(Date.now()+POT.off))/1000));
+    multEl.textContent=POT.roundId?(left+'s'):'…';
+    if(POT.roundId){ msub.textContent='pot '+POT.total+' ◉ · '+players.length+' in · need 2+'; potEl.textContent=POT.total; }
+  }
+  const showPot=(state==='idle'&&!POT.on);
+  if(potbtn._shown!==showPot){ potbtn._shown=showPot; potbtn.style.display=showPot?'':'none'; }
   // shake decay
   shakeAmt*=0.85; if(shakeAmt<0.1)shakeAmt=0;
   shake.style.transform = shakeAmt? `translate(${(Math.random()-.5)*shakeAmt}px,${(Math.random()-.5)*shakeAmt}px)`:'';
@@ -361,13 +350,7 @@ function renderBoard(d, el, full){
     '<div class="lbrow'+(p.name===player.name?' me':'')+'"><span>'+(i+1)+'. '+p.name+'</span><span class="lbg">'+(p.best_mult||0).toFixed(2)+'×</span></div>').join('');
 }
 function showSettle(){ const me=players[0];
-  bal += Math.round(me.payout); SAVE.bal=bal; balEl.textContent=bal;
-  // round history + personal best
-  const _w=me.status==='cashed';
-  SAVE.rounds++; if(_w){ SAVE.cashes++; if(me.cash>SAVE.bestM){ SAVE.bestM=me.cash; } }
-  SAVE.hist.unshift({m:won?me.cash:null, brk:+breakAt.toFixed(2), net:Math.round(me.payout)-ANTE});
-  if(SAVE.hist.length>8) SAVE.hist.length=8;
-  persist();
+  bal += Math.round(me.payout); balEl.textContent=bal;
   const allBust = players.every(p=>p.status!=='cashed');
   const won = me.status==='cashed'; const net=Math.round(me.payout)-ANTE;
   const ovh=document.getElementById('ovh');
@@ -377,11 +360,9 @@ function showSettle(){ const me=players[0];
   } else {
     ovh.style.color='';
     ov.className='ov on '+(won&&net>0?'ovwin':won?'':'ovbust');
-    ovh.textContent = won? (net>0?'YOU WON':'YOU CASHED') : (me.tooLate? 'TOO LATE' : 'BUSTED');
+    ovh.textContent = won? (net>0?'YOU WON':'YOU CASHED') : 'BUSTED';
     document.getElementById('ovres').innerHTML = won
       ? `Cashed at <b>${me.cash.toFixed(2)}×</b> — took <b>${Math.round(me.payout)}</b> from a ${Math.round(players.length*ANTE*(1-RAKE))} pot. Break was <b>${breakAt.toFixed(2)}×</b>.`
-      : me.tooLate
-      ? `You hit CASH at <b>${me.tooLate.toFixed(2)}×</b> — but the break landed first at <b>${breakAt.toFixed(2)}×</b>. Milliseconds. Cash one beat sooner.`
       : `You held to the break at <b>${breakAt.toFixed(2)}×</b> and busted. Survivors split the pot.`;
   }
   const sorted=[...players].sort((a,b)=>b.payout-a.payout);
@@ -389,21 +370,11 @@ function showSettle(){ const me=players[0];
     <span>${p.name}${p.status==='bust'?' <span class="b">· bust</span>':' · '+p.cash.toFixed(2)+'×'}</span>
     <span class="${p.payout>0?'g':'b'}">${p.payout>0?'+'+Math.round(p.payout):'0'}</span></div>`).join('');
   document.getElementById('ovseed').textContent='revealed seed · '+serverSeed+(serverMode?'  · server-verified, provably fair':'  · local (offline)');
-  // history strip + personal best
-  (function(){ const h=document.getElementById('ovhist'); if(!h) return;
-    const cells=SAVE.hist.map(r=> r.m
-      ? '<span style="color:var(--green)">'+r.m.toFixed(2)+'×</span>'
-      : '<span style="color:var(--red)">✕'+(r.brk?r.brk.toFixed(1):'')+'</span>').join('<span style="color:var(--faint)"> · </span>');
-    const pb=SAVE.bestM>0? 'PB <b style="color:var(--gold)">'+SAVE.bestM.toFixed(2)+'×</b> · ':'';
-    const rate=SAVE.rounds? Math.round(100*SAVE.cashes/SAVE.rounds):0;
-    h.innerHTML = pb + 'last '+SAVE.hist.length+': '+(cells||'—')+' · survive rate '+rate+'%';
-  })();
   const ob=document.getElementById('ovboard');
   if(serverMode){ ob.innerHTML='<div class="lbcap">🏆 ranking…</div>'; NET.board().then(d=>renderBoard(d,ob,false)).catch(()=>{ob.innerHTML='';}); }
   else { ob.innerHTML=''; }
   state='idle';
   btn.className='bigbtn start'; btn.textContent='ANTE 5 · START ROUND';
-  refreshPB();
 }
 
 /* ---------- draw: grid + curve + particles ---------- */
@@ -431,31 +402,156 @@ function flashScreen(color,amt){ flash.style.background=color; flash.style.opaci
 function cheapHash(s){ let h=0; for(let i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))>>>0;} return ('00000000'+h.toString(16)).slice(-8)+'…'; }
 
 /* profiles + leaderboard wiring */
-document.getElementById('pname').onclick=()=>{
-  const m=document.getElementById('nameModal'); m.classList.add('on');
-  const inp=document.getElementById('nameInp'); inp.value=(player.name||'').replace(/^guest\d+$/,''); setTimeout(()=>inp.focus(),60);
-};
-document.getElementById('nameGo').onclick=()=>{
-  const v=document.getElementById('nameInp').value.trim();
-  if(v){ player.name=v.slice(0,16); ensurePlayer(); }
-  document.getElementById('nameModal').classList.remove('on');
-};
-document.getElementById('nameInp')&&document.getElementById('nameInp').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('nameGo').click(); });
-document.getElementById('nameModal').onclick=e=>{ if(e.target.id==='nameModal')e.currentTarget.classList.remove('on'); };
-document.getElementById('lbbtn').onclick=()=>{ document.getElementById('lbmodal').classList.add('on'); lbTab='all'; lbLoad(); };
+document.getElementById('pname').onclick=()=>{ const n=prompt('Name for the leaderboard:', player.name||''); if(n){ player.name=n.slice(0,16); ensurePlayer(); } };
+document.getElementById('lbbtn').onclick=()=>{ const m=document.getElementById('lbmodal'); m.classList.add('on'); const l=document.getElementById('lblist'); l.innerHTML='loading…'; NET.board().then(d=>renderBoard(d,l,true)).catch(()=>{l.innerHTML='<div class="lbrow"><span class="muted">leaderboard offline</span></div>';}); };
 document.getElementById('lbx').onclick=()=>document.getElementById('lbmodal').classList.remove('on');
-let lbTab='all';
-function lbLoad(){ const l=document.getElementById('lblist'); l.innerHTML='loading…';
-  NET.board(lbTab==='day'?'daily':null).then(d=>renderBoard(d,l,true)).catch(()=>{l.innerHTML='board unavailable';});
-  const A=document.getElementById('lbtabAll'),D=document.getElementById('lbtabDay');
-  const on='flex:1;font-size:12px;padding:8px', gold='background:var(--gold)', dim='background:#1a1a2c;color:var(--muted);box-shadow:none';
-  A.style.cssText=on+';'+(lbTab==='all'?gold:dim); D.style.cssText=on+';'+(lbTab==='day'?gold:dim); }
-document.getElementById('lbtabAll').onclick=()=>{lbTab='all';lbLoad();};
-document.getElementById('lbtabDay').onclick=()=>{lbTab='day';lbLoad();};
 document.getElementById('lbmodal').onclick=e=>{ if(e.target.id==='lbmodal')e.currentTarget.classList.remove('on'); };
-function refreshPB(){ const e=document.getElementById('pbline'); if(!e) return;
-  e.textContent = SAVE.bestM>0 ? ('your record: '+SAVE.bestM.toFixed(2)+'× · '+SAVE.cashes+'/'+SAVE.rounds+' cashed') : ''; }
-refreshPB();
+/* ---------- LIVE POT (multiplayer — server-authoritative shared rounds) ----------
+   Additive: solo flow above is untouched. Server owns the clock, the curve and the
+   secret break; this client only renders M((now+off−t0)/1000) and submits intent. */
+const POT={on:false,roundId:null,tier:0,t0:0,off:0,total:0,credits:null,poll:null,settled:false,last:{},fails:0};
+const potbtn=document.getElementById('potbtn'), feedEl=document.getElementById('feed');
+const tierov=document.getElementById('tierov'), ovexit=document.getElementById('ovexit');
+function feed(msg,cls){ const d=document.createElement('div'); d.className='ev '+(cls||''); d.innerHTML=msg;
+  feedEl.appendChild(d); while(feedEl.children.length>4)feedEl.removeChild(feedEl.firstChild);
+  setTimeout(()=>{ if(d.parentNode)d.parentNode.removeChild(d); },6000); }
+function potOpenTiers(){ if(state!=='idle'||POT.on)return; initAudio(); ensurePlayer();
+  document.getElementById('tiercred').textContent=POT.credits==null?'syncs on join':POT.credits+' ◉';
+  tierov.classList.add('on'); }
+async function potJoinTier(tier){
+  tierov.classList.remove('on');
+  if(POT.poll){clearInterval(POT.poll);POT.poll=null;}
+  await ensurePlayer(); initAudio(); if(AC&&AC.state==='suspended')AC.resume();
+  POT.on=true; POT.tier=tier; POT.settled=false; POT.roundId=null; POT.last={}; POT.fails=0;
+  state='potlobby'; players=[]; curve=[]; particles=[]; breakAt=Infinity; serverMode=false;
+  ov.className='ov'; ovexit.style.display='none'; feedEl.innerHTML='';
+  multEl.style.color='var(--gold)'; multEl.style.transform=''; multEl.textContent='…';
+  msub.textContent='joining live pot…'; potEl.textContent='0';
+  btn.className='bigbtn wait'; btn.textContent='JOINING…';
+  hint.textContent='live pot · ante '+tier+' ◉ · the server holds the break';
+  renderPlayers();
+  try{
+    const r=await fetch(API+'/api/pot/join',{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({playerId:player.id,name:player.name,ante:tier})});
+    const d=await r.json();
+    if(!r.ok){ potExit(r.status===402?'not enough live credits — solo play is free':((d&&d.error)||'could not join a pot')); return; }
+    POT.roundId=d.roundId; POT.t0=d.t0; POT.off=d.now-Date.now(); POT.total=d.players*tier;
+    if(d.credits!=null){ POT.credits=d.credits; balEl.textContent=d.credits; }
+    seedline.textContent='commit · '+(d.commit||'').slice(0,10)+'… · live pot';
+    btn.textContent='WAITING FOR PLAYERS…';
+    POT.poll=setInterval(potPollState,1000); potPollState();
+  }catch(e){ potExit('live pots unreachable — solo still works'); }
+}
+function potPollState(){
+  if(!POT.on||!POT.roundId)return;
+  fetch(API+'/api/pot/state?r='+POT.roundId+'&p='+encodeURIComponent(player.id||''))
+    .then(r=>r.json()).then(s=>{ POT.fails=0; potApply(s); })
+    .catch(()=>{ if(++POT.fails>=10) potExit('connection lost — back to solo'); });
+}
+function potApply(s){
+  if(!POT.on||!s||s.roundId!==POT.roundId)return;
+  POT.off=s.now-Date.now(); POT.t0=s.t0; POT.total=s.pot;
+  if(s.you&&s.you.credits!=null){ POT.credits=s.you.credits; balEl.textContent=s.you.credits; }
+  // opponent events feed (riding → cashed/bust transitions)
+  (s.players||[]).forEach(p=>{ if(p.you){ POT.last[p.name]=p.status; return; }
+    const prev=POT.last[p.name];
+    if(prev==='riding'&&p.status==='cashed'){ feed('<b>'+p.name+'</b> cashed @'+(p.m||0).toFixed(2)+'×'); tone(620,0.07,'triangle',0.12); }
+    if(prev==='riding'&&p.status==='bust'&&s.phase!=='settled'){ feed('<b>'+p.name+'</b> busted','bust'); }
+    POT.last[p.name]=p.status; });
+  // players rail — server truth, but keep our own optimistic cash until confirmed
+  const localMe=players.find(p=>p.you);
+  players=(s.players||[]).map(p=>({name:p.you?'YOU':p.name,you:!!p.you,
+    status:p.status==='riding'||p.status==='refunded'?'in':p.status, cash:p.m||null, payout:p.payout}));
+  const sm=players.find(p=>p.you);
+  if(localMe&&sm&&sm.status==='in'&&localMe.status!=='in'){ sm.status=localMe.status; sm.cash=localMe.cash; }
+  renderPlayers();
+  if(s.phase==='lobby'){ if(state!=='potlobby')state='potlobby'; }
+  else if(s.phase==='live'){ if(state!=='climb')potBeginClimb(); }
+  else if(s.phase==='settled'){ potShowSettle(s); }
+  else if(s.phase==='cancelled'){ potShowCancel(s); }
+}
+function potBeginClimb(){ state='climb'; mult=1; curve=[]; particles=[]; breakAt=Infinity; serverMode=false;
+  multEl.style.color='var(--gold)'; msub.textContent='HOLD for more · CASH to lock';
+  tone(220,0.2,'sawtooth',0.12,330); heartbeat();
+  const me=players.find(p=>p.you);
+  if(me&&me.status==='in'){ btn.className='bigbtn cash'; btn.textContent='CASH @ 1.00×'; } }
+function potCashLive(){
+  const me=players.find(p=>p.you); if(!POT.on||state!=='climb'||!me||me.status!=='in')return;
+  me.status='cashing'; btn.className='bigbtn wait'; btn.textContent='locking…';
+  fetch(API+'/api/pot/cash',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({roundId:POT.roundId,playerId:player.id})})
+   .then(r=>r.json()).then(d=>{
+     if(d&&d.result==='cashed'){ me.status='cashed'; me.cash=d.m; renderPlayers(); chime(); burst('#37D58C'); flashScreen('#37D58C',0.18);
+       btn.textContent='CASHED '+d.m.toFixed(2)+'× · waiting…'; msub.textContent='locked '+d.m.toFixed(2)+'× — will they bust?'; }
+     else if(d&&d.result==='bust'){ me.status='bust'; me.cash=null; renderPlayers(); thud(); burst('#FF4D67'); flashScreen('#FF4D67',0.32); shakeAmt=14;
+       btn.textContent='TOO LATE — BUST'; msub.textContent='the break beat you'; }
+     else { me.status='in'; btn.className='bigbtn cash'; }   // 409 etc — next poll reconciles
+     potPollState();
+   }).catch(()=>{ me.status='in'; btn.className='bigbtn cash'; });
+}
+function potShowSettle(s){
+  if(POT.settled)return; POT.settled=true;
+  if(POT.poll){clearInterval(POT.poll);POT.poll=null;}
+  state='settle'; if(hbTimer)clearTimeout(hbTimer);
+  const ps=s.players||[]; const meP=ps.find(p=>p.you)||{};
+  const won=meP.status==='cashed'; const net=(meP.payout||0)-s.ante;
+  const allBust=ps.every(p=>p.status!=='cashed');
+  if(!won&&!allBust){ thud(); burst('#FF4D67'); flashScreen('#FF4D67',0.3); shakeAmt=12; }
+  else flashScreen(won&&net>0?'#37D58C':'#ffffff',0.2);
+  const ovh=document.getElementById('ovh');
+  if(allBust){ ov.className='ov on'; ovh.style.color='var(--gold)'; ovh.textContent='EVERYONE BUST';
+    document.getElementById('ovres').innerHTML='The break hit <b>'+(+s.breakAt||0).toFixed(2)+'×</b> before a single nerve cracked. Antes refunded.'; }
+  else{ ovh.style.color='';
+    ov.className='ov on '+(won&&net>0?'ovwin':won?'':'ovbust');
+    ovh.textContent= won?(net>0?'YOU WON':'YOU CASHED'):'BUSTED';
+    document.getElementById('ovres').innerHTML = won
+      ? 'Cashed at <b>'+(+meP.m||0).toFixed(2)+'×</b> — payout <b>'+(meP.payout||0)+'</b> ◉ from a '+s.pot+' pot (net '+(net>=0?'+':'')+net+'). Break was <b>'+(+s.breakAt||0).toFixed(2)+'×</b>.'
+      : 'You held past the break at <b>'+(+s.breakAt||0).toFixed(2)+'×</b>. Survivors split the '+s.pot+' pot.'; }
+  const sorted=[...ps].sort((a,b)=>(b.payout||0)-(a.payout||0));
+  document.getElementById('ovtbl').innerHTML=sorted.map(p=>'<div class="r '+(p.you?'you':'')+'">'+
+    '<span>'+(p.you?'YOU':p.name)+(p.status==='cashed'?' · '+(+p.m||0).toFixed(2)+'×':' <span class="b">· bust</span>')+'</span>'+
+    '<span class="'+((p.payout||0)>0?'g':'b')+'">'+((p.payout||0)>0?'+'+p.payout:'0')+'</span></div>').join('');
+  document.getElementById('ovseed').textContent='revealed seed · '+(s.serverSeed||'')+' · break '+(+s.breakAt||0).toFixed(2)+'× · rake '+(s.rake||0)+' · server-verified, provably fair';
+  document.getElementById('ovboard').innerHTML='';
+  document.getElementById('again').textContent='RE-ANTE '+s.ante+' ◉ LIVE';
+  ovexit.style.display='';
+  state='idle';
+}
+function potShowCancel(s){
+  if(POT.settled)return; POT.settled=true;
+  if(POT.poll){clearInterval(POT.poll);POT.poll=null;}
+  if(hbTimer)clearTimeout(hbTimer);
+  if(s.you&&s.you.credits!=null){ POT.credits=s.you.credits; balEl.textContent=s.you.credits; }
+  const ovh=document.getElementById('ovh');
+  ov.className='ov on'; ovh.style.color='var(--gold)'; ovh.textContent='ROUND CANCELLED';
+  document.getElementById('ovres').innerHTML='Not enough players joined in time — your ante was refunded.';
+  document.getElementById('ovtbl').innerHTML=''; document.getElementById('ovseed').textContent='';
+  document.getElementById('ovboard').innerHTML='';
+  document.getElementById('again').textContent='RE-ANTE '+POT.tier+' ◉ LIVE';
+  ovexit.style.display='';
+  state='idle';
+}
+function potExit(msg){
+  POT.on=false; POT.roundId=null; POT.settled=false;
+  if(POT.poll){clearInterval(POT.poll);POT.poll=null;}
+  if(hbTimer)clearTimeout(hbTimer);
+  state='idle'; players=[]; curve=[]; particles=[]; breakAt=2; feedEl.innerHTML='';
+  ov.className='ov'; ovexit.style.display='none';
+  balEl.textContent=bal;   // back to the solo free-play wallet
+  multEl.style.color='var(--gold)'; multEl.style.transform=''; multEl.textContent='1.00×';
+  msub.textContent='last nerve standing takes the pot'; potEl.textContent='0';
+  seedline.textContent='commit · —';
+  btn.className='bigbtn start'; btn.textContent='ANTE 5 · START ROUND';
+  document.getElementById('again').textContent='RE-ANTE 5 ◉';
+  hint.textContent=msg||'Hold for a bigger cut — cash before the break. Sound on for the full feel.';
+  renderPlayers();
+}
+potbtn.onclick=potOpenTiers;
+ovexit.onclick=()=>potExit();
+document.getElementById('tierx').onclick=()=>tierov.classList.remove('on');
+tierov.onclick=e=>{ if(e.target===tierov)tierov.classList.remove('on'); };
+document.querySelectorAll('.tierbtn').forEach(b=>b.onclick=()=>potJoinTier(+b.dataset.t));
+
 ensurePlayer();
 renderPlayers(); loop();
 </script>
