@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
-<title>NERVE — feel prototype</title>
+<title>NERVE — hold your nerve, cash before the break | INSERT COIN</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
@@ -144,6 +144,7 @@ if(sk)sk.addEventListener('click',reveal);
   <div class="control">
     <button class="bigbtn start" id="btn">ANTE 5 · START ROUND</button>
     <div class="hint" id="hint">Hold for a bigger cut — cash before the break. Sound on for the full feel.</div>
+    <div class="hint" id="pbline" style="margin-top:4px"></div>
   </div>
 
   <div class="ov" id="ov">
@@ -151,6 +152,7 @@ if(sk)sk.addEventListener('click',reveal);
     <div class="res" id="ovres"></div>
     <div class="tbl" id="ovtbl"></div>
     <div class="seed" id="ovseed"></div>
+    <div class="seed" id="ovhist" style="margin-top:4px"></div>
     <div class="lbmini" id="ovboard"></div>
     <div class="ovbtns">
       <a class="again ghost" href="../arcade-shell/index.html">⌂ ARCADE</a>
@@ -159,8 +161,20 @@ if(sk)sk.addEventListener('click',reveal);
   </div>
 </div>
 
+<div class="lbmodal" id="nameModal"><div class="lbsheet">
+  <div class="lbhead">YOUR TAG<span class="lbx" onclick="document.getElementById('nameModal').classList.remove('on')">✕</span></div>
+  <div style="padding:6px 2px 2px">
+    <input id="nameInp" maxlength="16" placeholder="3-16 chars — own your cash-outs" style="width:100%;background:#0d0d1a;border:1px solid var(--line);border-radius:10px;color:var(--ink);font-family:var(--fm);font-size:14px;padding:12px 14px;outline:none">
+    <button id="nameGo" class="bigbtn" style="margin-top:10px;font-size:16px;padding:13px">LOCK IT IN</button>
+    <div style="font-size:10px;color:var(--faint);margin-top:8px;letter-spacing:.06em">your best cash multipliers post under this tag</div>
+  </div>
+</div></div>
 <div class="lbmodal" id="lbmodal"><div class="lbsheet">
   <div class="lbhead">🏆 TOP CASH-OUTS<span class="lbx" id="lbx">✕</span></div>
+  <div style="display:flex;gap:8px;margin:2px 0 8px">
+    <button id="lbtabAll" class="bigbtn" style="flex:1;font-size:12px;padding:8px;background:var(--gold)">ALL-TIME</button>
+    <button id="lbtabDay" class="bigbtn" style="flex:1;font-size:12px;padding:8px;background:#1a1a2c;color:var(--muted);box-shadow:none">TODAY</button>
+  </div>
   <div class="lblist" id="lblist">loading…</div>
   <div class="lbnote">server-ranked · provably fair · the server holds the break, so fake scores can't post</div>
 </div></div>
@@ -169,7 +183,11 @@ if(sk)sk.addEventListener('click',reveal);
 /* ---------- config ---------- */
 const ANTE=5, RAKE=0.04, LAMBDA=0.16, NBOTS=4;
 const BOTNAMES=["deathstar","kira","walt","nyx","rook","vega"];
-let bal=500;
+const SAVE_KEY='nerve_save_v1';
+function loadSave(){ try{ const j=JSON.parse(localStorage.getItem(SAVE_KEY)); if(j&&isFinite(j.bal)) return j; }catch(e){} return {bal:500,bestM:0,rounds:0,cashes:0,hist:[]}; }
+const SAVE=loadSave();
+function persist(){ try{ localStorage.setItem(SAVE_KEY,JSON.stringify(SAVE)); }catch(e){} }
+let bal=SAVE.bal;
 /* ---------- backend: anti-cheat + profiles + leaderboard ---------- */
 const API='https://www.stakit.app/api/nerve';
 let player={id:localStorage.getItem('nerveId'), name:localStorage.getItem('nerveName')};
@@ -178,7 +196,7 @@ const NET={
   player:(name)=>fetch(API+'?op=player',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id:player.id,name})}).then(r=>r.json()),
   start:()=>fetch(API+'?op=start',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({playerId:player.id})}).then(r=>{if(!r.ok)throw 0;return r.json();}),
   cash:(rid,m)=>fetch(API+'?op=cash',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({roundId:rid,m})}).then(r=>r.json()),
-  board:()=>fetch(API+'?op=top').then(r=>r.json())
+  board:(b)=>fetch(API+'?op=top'+(b==='daily'?'&board=daily':'')).then(r=>r.json())
 };
 async function ensurePlayer(){
   if(!player.name) player.name='guest'+Math.floor(1000+Math.random()*9000);
@@ -240,10 +258,10 @@ async function startRound(){
   if(state==='countdown'||state==='climb') return;   // a round is already running — ignore extra taps
   state='countdown';                                  // lock immediately (covers the async network gap)
   clearInterval(ci); ci=null; clearTimeout(settleTimer); if(hbTimer)clearTimeout(hbTimer);
-  if(bal<ANTE){hint.textContent="Out of free credits — refresh to reset."; state='idle'; return;}
+  if(bal<ANTE){ bal=100; SAVE.bal=bal; persist(); balEl.textContent=bal; hint.textContent="Staked you 100 fresh credits — make these count."; }
   initAudio(); if(AC&&AC.state==='suspended')AC.resume();
-  bal-=ANTE; balEl.textContent=bal;
-  setPlayers(); curve=[]; particles=[]; ov.className='ov';
+  bal-=ANTE; SAVE.bal=bal; persist(); balEl.textContent=bal;
+  setPlayers(); players[0].tooLate=null; curve=[]; particles=[]; ov.className='ov';
   multEl.style.color='var(--brand)'; multEl.style.transform=''; multEl.textContent='…';
   btn.className='bigbtn wait'; btn.textContent='—'; hint.textContent=''; msub.textContent='dealing in…';
   serverMode=false; roundId=null;
@@ -270,7 +288,7 @@ function youCash(){ const me=players[0]; if(state!=='climb'||me.status!=='in')re
           breakAt=(resp.breakAt&&isFinite(resp.breakAt)&&resp.breakAt>m)?resp.breakAt:m*1.15; // reveal break and LET IT RIDE — round climbs to it, then settles
           btn.className='bigbtn wait'; btn.textContent='CASHED '+m.toFixed(2)+'× · let it ride…';
           msub.textContent='locked '+m.toFixed(2)+'× — how far does it go?';
-        } else { me.status='bust'; me.cash=null; breakAt=resp.breakAt; endRoundServer(); }
+        } else { me.status='bust'; me.cash=null; me.tooLate=m; breakAt=resp.breakAt; endRoundServer(); }
       } else { me.status='cashed'; me.cash=m; serverMode=false; breakAt=m*1.15; endRound(); }
     }).catch(()=>{ me.status='cashed'; me.cash=m; serverMode=false; breakAt=m*1.15; endRound(); });
   } else {
@@ -343,7 +361,13 @@ function renderBoard(d, el, full){
     '<div class="lbrow'+(p.name===player.name?' me':'')+'"><span>'+(i+1)+'. '+p.name+'</span><span class="lbg">'+(p.best_mult||0).toFixed(2)+'×</span></div>').join('');
 }
 function showSettle(){ const me=players[0];
-  bal += Math.round(me.payout); balEl.textContent=bal;
+  bal += Math.round(me.payout); SAVE.bal=bal; balEl.textContent=bal;
+  // round history + personal best
+  const _w=me.status==='cashed';
+  SAVE.rounds++; if(_w){ SAVE.cashes++; if(me.cash>SAVE.bestM){ SAVE.bestM=me.cash; } }
+  SAVE.hist.unshift({m:won?me.cash:null, brk:+breakAt.toFixed(2), net:Math.round(me.payout)-ANTE});
+  if(SAVE.hist.length>8) SAVE.hist.length=8;
+  persist();
   const allBust = players.every(p=>p.status!=='cashed');
   const won = me.status==='cashed'; const net=Math.round(me.payout)-ANTE;
   const ovh=document.getElementById('ovh');
@@ -353,9 +377,11 @@ function showSettle(){ const me=players[0];
   } else {
     ovh.style.color='';
     ov.className='ov on '+(won&&net>0?'ovwin':won?'':'ovbust');
-    ovh.textContent = won? (net>0?'YOU WON':'YOU CASHED') : 'BUSTED';
+    ovh.textContent = won? (net>0?'YOU WON':'YOU CASHED') : (me.tooLate? 'TOO LATE' : 'BUSTED');
     document.getElementById('ovres').innerHTML = won
       ? `Cashed at <b>${me.cash.toFixed(2)}×</b> — took <b>${Math.round(me.payout)}</b> from a ${Math.round(players.length*ANTE*(1-RAKE))} pot. Break was <b>${breakAt.toFixed(2)}×</b>.`
+      : me.tooLate
+      ? `You hit CASH at <b>${me.tooLate.toFixed(2)}×</b> — but the break landed first at <b>${breakAt.toFixed(2)}×</b>. Milliseconds. Cash one beat sooner.`
       : `You held to the break at <b>${breakAt.toFixed(2)}×</b> and busted. Survivors split the pot.`;
   }
   const sorted=[...players].sort((a,b)=>b.payout-a.payout);
@@ -363,11 +389,21 @@ function showSettle(){ const me=players[0];
     <span>${p.name}${p.status==='bust'?' <span class="b">· bust</span>':' · '+p.cash.toFixed(2)+'×'}</span>
     <span class="${p.payout>0?'g':'b'}">${p.payout>0?'+'+Math.round(p.payout):'0'}</span></div>`).join('');
   document.getElementById('ovseed').textContent='revealed seed · '+serverSeed+(serverMode?'  · server-verified, provably fair':'  · local (offline)');
+  // history strip + personal best
+  (function(){ const h=document.getElementById('ovhist'); if(!h) return;
+    const cells=SAVE.hist.map(r=> r.m
+      ? '<span style="color:var(--green)">'+r.m.toFixed(2)+'×</span>'
+      : '<span style="color:var(--red)">✕'+(r.brk?r.brk.toFixed(1):'')+'</span>').join('<span style="color:var(--faint)"> · </span>');
+    const pb=SAVE.bestM>0? 'PB <b style="color:var(--gold)">'+SAVE.bestM.toFixed(2)+'×</b> · ':'';
+    const rate=SAVE.rounds? Math.round(100*SAVE.cashes/SAVE.rounds):0;
+    h.innerHTML = pb + 'last '+SAVE.hist.length+': '+(cells||'—')+' · survive rate '+rate+'%';
+  })();
   const ob=document.getElementById('ovboard');
   if(serverMode){ ob.innerHTML='<div class="lbcap">🏆 ranking…</div>'; NET.board().then(d=>renderBoard(d,ob,false)).catch(()=>{ob.innerHTML='';}); }
   else { ob.innerHTML=''; }
   state='idle';
   btn.className='bigbtn start'; btn.textContent='ANTE 5 · START ROUND';
+  refreshPB();
 }
 
 /* ---------- draw: grid + curve + particles ---------- */
@@ -395,10 +431,31 @@ function flashScreen(color,amt){ flash.style.background=color; flash.style.opaci
 function cheapHash(s){ let h=0; for(let i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))>>>0;} return ('00000000'+h.toString(16)).slice(-8)+'…'; }
 
 /* profiles + leaderboard wiring */
-document.getElementById('pname').onclick=()=>{ const n=prompt('Name for the leaderboard:', player.name||''); if(n){ player.name=n.slice(0,16); ensurePlayer(); } };
-document.getElementById('lbbtn').onclick=()=>{ const m=document.getElementById('lbmodal'); m.classList.add('on'); const l=document.getElementById('lblist'); l.innerHTML='loading…'; NET.board().then(d=>renderBoard(d,l,true)).catch(()=>{l.innerHTML='<div class="lbrow"><span class="muted">leaderboard offline</span></div>';}); };
+document.getElementById('pname').onclick=()=>{
+  const m=document.getElementById('nameModal'); m.classList.add('on');
+  const inp=document.getElementById('nameInp'); inp.value=(player.name||'').replace(/^guest\d+$/,''); setTimeout(()=>inp.focus(),60);
+};
+document.getElementById('nameGo').onclick=()=>{
+  const v=document.getElementById('nameInp').value.trim();
+  if(v){ player.name=v.slice(0,16); ensurePlayer(); }
+  document.getElementById('nameModal').classList.remove('on');
+};
+document.getElementById('nameInp')&&document.getElementById('nameInp').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('nameGo').click(); });
+document.getElementById('nameModal').onclick=e=>{ if(e.target.id==='nameModal')e.currentTarget.classList.remove('on'); };
+document.getElementById('lbbtn').onclick=()=>{ document.getElementById('lbmodal').classList.add('on'); lbTab='all'; lbLoad(); };
 document.getElementById('lbx').onclick=()=>document.getElementById('lbmodal').classList.remove('on');
+let lbTab='all';
+function lbLoad(){ const l=document.getElementById('lblist'); l.innerHTML='loading…';
+  NET.board(lbTab==='day'?'daily':null).then(d=>renderBoard(d,l,true)).catch(()=>{l.innerHTML='board unavailable';});
+  const A=document.getElementById('lbtabAll'),D=document.getElementById('lbtabDay');
+  const on='flex:1;font-size:12px;padding:8px', gold='background:var(--gold)', dim='background:#1a1a2c;color:var(--muted);box-shadow:none';
+  A.style.cssText=on+';'+(lbTab==='all'?gold:dim); D.style.cssText=on+';'+(lbTab==='day'?gold:dim); }
+document.getElementById('lbtabAll').onclick=()=>{lbTab='all';lbLoad();};
+document.getElementById('lbtabDay').onclick=()=>{lbTab='day';lbLoad();};
 document.getElementById('lbmodal').onclick=e=>{ if(e.target.id==='lbmodal')e.currentTarget.classList.remove('on'); };
+function refreshPB(){ const e=document.getElementById('pbline'); if(!e) return;
+  e.textContent = SAVE.bestM>0 ? ('your record: '+SAVE.bestM.toFixed(2)+'× · '+SAVE.cashes+'/'+SAVE.rounds+' cashed') : ''; }
+refreshPB();
 ensurePlayer();
 renderPlayers(); loop();
 </script>
